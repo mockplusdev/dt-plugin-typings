@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["es6"],
+    "noEmit": true,
+    "strict": true,
+  },
+  "files": [
+    "index.d.ts",
+    "plugin-api.d.ts",
+    "plugin-types.d.ts"
+  ]
+}
