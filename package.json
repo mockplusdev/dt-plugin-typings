@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mockplus/plugin-typings.git"
+    "url": "git+https://github.com/mockplusdev/plugin-typings.git"
   },
   "keywords": [
     "mockplus",
@@ -19,7 +19,7 @@
   "author": "Mockplus",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mockplus/plugin-typings/issues"
+    "url": "https://github.com/mockplusdev/plugin-typings/issues"
   },
-  "homepage": "https://github.com/mockplus/plugin-typings#readme"
+  "homepage": "https://github.com/mockplusdev/plugin-typings#readme"
 }
