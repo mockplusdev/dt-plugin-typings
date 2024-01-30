@@ -168,6 +168,14 @@ declare enum TextBehaviour {
   Both,
 }
 
+declare enum Decoration {
+  None = 0,
+  Underline = 1 << 0,
+  Upperline = 1 << 1,
+  StrikeThrough = 1 << 2,
+}
+
+
 declare enum SmartLayout {
   LeftToRight,
   HorizontallyCenter,

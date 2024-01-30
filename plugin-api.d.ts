@@ -55,7 +55,7 @@ interface PluginAPI {
   triggerUndo(): void;
   triggerRedo(): void;
 
-  createNodeFromSvg(svg: string): Promise<Layer[]>;
+  createNodeFromSvg(svg: string, svgContainerOptions?: ISvgContainerOptions): Promise<Layer[]>;
   getSVGString(layer: Layer): string;
 
   /**
@@ -63,14 +63,24 @@ interface PluginAPI {
    *
    * const data = new Uint8Array([]);
    *
-   * mockplus.createImageData(data, 'png')
-   *  .then(imageData=> {
+   * mockplus.createImageData(data)
+   *  .then(imageData => {
    *      const imageLayer = mockplus.createImage();
    *      imageLayer.image = imageData.hash;
    *  });
    *
    */
-  createImageData(data: Uint8Array, type: ImageType): Promise<ImageData>;
+  createImageData(data: number[], type: ImageType): Promise<ImageData>;
+
+  /**
+   * 获取一张图片资源数据
+   *
+   * const imageLayer = mockplus.currentPage.layers[0] as Image; // 假设第一个图层为image图层
+   * if (imageLayer.image) {
+   *    const imageData = await mockplus.getImageDataByHash(imageLayer.image);
+   *    const dataArray = await imageData.getBytesAsync();
+   * }
+   */
   getImageDataByHash(hash: string): ImageData;
 
   listAvailableFonts(): FontFamily[];
@@ -80,11 +90,16 @@ interface PluginAPI {
 
   createColorStyle(color: Color): SharedColorStyle;
   createTextStyle(layer: Text): SharedTextStyle | null;
-  createLayerStyle(layer: Path | ShapeGroup | Image): SharedLayerStyle | null;
+  createLayerStyle(layer: Path | ShapeGroup | Image | Frame): SharedLayerStyle | null;
 
   findResourceById(resID: string): SharedColorStyle | SharedLayerStyle | SharedTextStyle | SharedSymbolStyle | null;
 
   readonly libraries: ReadonlyArray<Library>;
+}
+
+interface ISvgContainerOptions {
+  name: string;
+  resizeContent: boolean;
 }
 
 interface UIAPI {
@@ -202,6 +217,7 @@ interface Layer {
   fills: ReadonlyArray<Fill>;
   borders: ReadonlyArray<Border>;
   shadows: ReadonlyArray<Shadow>;
+
   innerShadows: ReadonlyArray<Shadow>;
   borderOptions: BorderOptions;
   exportFormats: ReadonlyArray<ExportFormat>;
@@ -218,7 +234,7 @@ interface Layer {
   getParentSymbolMaster(): SymbolMaster | null;
   getParentGroup(): Group | null;
 
-  exportSourceAsync(exportFormat: ExportFormat): Promise<Uint8Array>;
+  exportSourceAsync(exportFormat: ExportFormat): Promise<number[]>;
 
   getPluginData(key: string): string | undefined;
   setPluginData(key: string, value: string): void;
@@ -296,7 +312,7 @@ interface ShapeGroup extends Container {
 }
 
 interface Frame extends Container {
-  background: Background;
+  // background: Background;
   flowStartPoint: boolean;
   gridSettings?: GridSettings;
   layoutSettings?: LayoutSettings;
@@ -304,6 +320,7 @@ interface Frame extends Container {
   horizontalRulers: number[];
   verticalRulers: number[];
 
+  readonly includeInExport: boolean;
   readonly parent: Page | null;
 }
 
@@ -312,6 +329,8 @@ interface Artboard extends Frame { }
 interface SymbolMaster extends Frame {
   readonly symbolID: string;
   readonly overrideProperties: ReadonlyArray<OverrideProperty>;
+  readonly includeInInstance: boolean;
+
   smartLayout?: SmartLayout;
   allowsOverrides: boolean;
 
@@ -342,6 +361,7 @@ interface User {
   readonly id: number;
   readonly name: string;
   readonly avatar: string;
+  readonly token: string;
   readonly teamID?: string;
 }
 
@@ -364,9 +384,12 @@ type FileFormat = 'jpg' | 'png' | 'svg' | 'webp';
 interface FontFamily {
   readonly family: string;
   readonly postscript: string;
+  readonly styleName: string;
   readonly weight: FontWeight;
   readonly slant: FontSlant;
   readonly width: FontWidth;
+  readonly isVariation?: boolean;
+  readonly localName?: string;
 }
 
 interface Bounds {
@@ -406,6 +429,7 @@ interface Blur {
   readonly motionAngle: number;
   readonly center: Position;
   readonly radius: number;
+  readonly saturation: number;
   readonly enabled: boolean;
 }
 
@@ -487,13 +511,6 @@ interface CurvePoint {
   readonly pointType: PointType;
 }
 
-interface Background {
-  readonly enabled: boolean;
-  readonly includedInExport: boolean;
-  readonly color: Color;
-  readonly includeInInstance?: boolean; // 只有当节点为SymbolMaster时，该属性才生效。
-}
-
 interface GridSettings {
   readonly enabled: boolean;
   readonly blockSize: number;
@@ -509,6 +526,9 @@ interface LayoutSettings {
     readonly gutterOnOutside: boolean;
     readonly gutterWidth: number;
     readonly columnsCount: number;
+    readonly type: string;
+    readonly offset: number;
+    readonly columnWidth: number;
   };
   readonly rows: {
     readonly enabled: boolean;
@@ -534,7 +554,7 @@ interface Flow {
 
 interface ImageData {
   readonly hash: string;
-  getBytesAsync(): Promise<Uint8Array>;
+  getBytesAsync(): Promise<number[]>;
 }
 
 type OverridePropertyValue = 'stringValue' | 'symbolID' | 'layerStyle' | 'textStyle'; // 这里暂时未提供image属性的覆写，太麻烦
@@ -620,6 +640,17 @@ interface SharedTextStyle extends BaseResourceStyle {
 
 interface SharedColorStyle extends BaseResourceStyle {
   readonly type: ResourceType.Color;
+
+  /**
+   * 设置颜色值为资源的引用，使用方式如下：
+   *
+   * const text = mockplus.createText();
+   * text.textColor = sharedColorStyle.referencingColor;
+   *
+   * 设置为非引用颜色值方式如下：
+   * text.textColor = sharedColorStyle.color;
+   *
+   */
   readonly referencingColor: any;
   color: Color;
 }
