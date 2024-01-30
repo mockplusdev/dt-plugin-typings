@@ -1,6 +1,6 @@
 {
   "name": "@mockplusdev/plugin-typings",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Typings for the Mockplus-DT Plugin API",
   "main": "",
   "scripts": {
