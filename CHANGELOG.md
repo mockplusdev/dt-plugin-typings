@@ -1,5 +1,8 @@
 # plugin-api typings change log
 
+## 1.0.2
+增加 PluginAPI.createNodeFromSvg 的可配参数
+
 ## 1.0.0
 
 插件初始版本的TS约束，具体类型定义可参考 
