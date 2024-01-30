@@ -1,6 +1,6 @@
 # plugin-api typings change log
 
-## 1.0.2
+## 1.0.3
 增加 PluginAPI.createNodeFromSvg 的可配参数
 
 ## 1.0.0
